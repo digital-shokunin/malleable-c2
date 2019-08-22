@@ -146,8 +146,12 @@ set amsi_disable "false";
 ##      - set spawnto_x86 "%windir%\\syswow64\\svchost.exe -k netsvcs";
 ##      - set spawnto_x64 "%windir%\\sysnative\\svchost.exe -k netsvcs";
 ##      - Note: svchost.exe may look weird as the parent process 
-set spawnto_x86 "%windir%\\syswow64\\dllhost.exe";
-set spawnto_x64 "%windir%\\sysnative\\dllhost.exe";
+
+
+post-ex {
+    set spawnto_x86 "%windir%\\syswow64\\dllhost.exe";
+    set spawnto_x64 "%windir%\\sysnative\\dllhost.exe";
+}
 
 ################################################
 ## TCP Beacon
@@ -362,7 +366,16 @@ process-inject {
     # disable "RtlCreateUserThread";
     
     # Only code injection technique that doesn't appear to break anything when disabled
-    disable "SetThreadContext";
+    # disable "SetThreadContext";
+    
+    #3.14+ compatible line
+    execute {
+        CreateThread "ntdll!RtlUserThreadStart";
+        CreateThread;
+        NtQueueApcThread-s;
+        CreateRemoteThread;
+        RtlCreateUserThread;
+    }
 }
 
 
